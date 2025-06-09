@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily TD Game</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: #222;
+      touch-action: none;
+    }
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+    }
+    #leaderboardModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #333;
+      padding: 1em;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script defer src="supabase.js"></script>
+  <script defer src="game.js"></script>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="720"></canvas>
+  <div id="ui">
+    <div id="stats">Lives: 20 | Money: $0 | Wave: 1</div>
+    <div id="score">Score: 0</div>
+  </div>
+  <div id="leaderboardModal">
+    <h3>Game Over</h3>
+    <input type="text" id="username" placeholder="Enter name" />
+    <button id="submitScore">Submit Score</button>
+    <ul id="leaderboard"></ul>
+  </div>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://kmfwqzotaedovnxrfekc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttZndxem90YWVkb3ZueHJmZWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1MDM5MTIsImV4cCI6MjA2NTA3OTkxMn0.c_he9jwhTjuxqB_4usZM48OEjEg0BEgYyd-x6ctbJJo'
+    );
+
+    async function submitScore(username, score) {
+      const date = new Date().toISOString().split('T')[0];
+      const { error } = await supabase.from('scores').insert([{ username, score, date }]);
+      if (error) console.error('Submit Error:', error);
+    }
+
+    async function fetchLeaderboard() {
+      const date = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('scores')
+        .select('*')
+        .eq('date', date)
+        .order('score', { ascending: false })
+        .limit(50);
+      if (error) {
+        console.error('Fetch Error:', error);
+        return [];
+      }
+      return data;
+    }
+
+    document.getElementById('submitScore').addEventListener('click', async () => {
+      const username = document.getElementById('username').value.trim();
+      const score = parseInt(document.getElementById('score').textContent.replace('Score: ', ''));
+      if (username && !isNaN(score)) {
+        await submitScore(username, score);
+        const leaderboard = await fetchLeaderboard();
+        const list = document.getElementById('leaderboard');
+        list.innerHTML = '';
+        leaderboard.forEach(entry => {
+          const li = document.createElement('li');
+          li.textContent = `${entry.username}: ${entry.score}`;
+          list.appendChild(li);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
