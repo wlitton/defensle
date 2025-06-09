@@ -158,9 +158,7 @@ function drawTowers() {
     ctx.arc(tower.x + TILE_SIZE / 2, tower.y + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
     ctx.fill();
   });
-}
-  });
-}
+  }
 
 canvas.addEventListener("click", e => {
     const rect = canvas.getBoundingClientRect();
@@ -219,7 +217,6 @@ function updateTowers(timestamp) {
           score += 10;
         }
       }
-    });
       if (target) {
         target.hp -= 5;
         tower.lastShot = timestamp;
